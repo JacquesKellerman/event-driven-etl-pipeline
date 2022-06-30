@@ -255,7 +255,8 @@ samconfig.toml
 
 # Terraform files
 .terraform.lock.hcl
-.terraform/
+terraform/.terraform
+*.tfstate.backup
 
 
 # End of https://www.gitignore.io/api/osx,linux,python,windows,pycharm,visualstudiocode

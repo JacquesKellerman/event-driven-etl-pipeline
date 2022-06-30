@@ -22,8 +22,8 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: "Scheduled event to call ETL Lambda function"
-      #ScheduleExpression: "cron(0 0 * * ? *)" # Sat, 18 Jun 2022 00:00:00 UTC
-      ScheduleExpression: "rate(10 minutes)"
+      ScheduleExpression: "cron(0 0 * * ? *)" # Sat, 18 Jun 2022 00:00:00 UTC
+      #ScheduleExpression: "rate(10 minutes)"
       State: "ENABLED"
       Targets: 
         - 
