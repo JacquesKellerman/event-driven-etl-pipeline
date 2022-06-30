@@ -80,19 +80,24 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - logs:*
+                  - logs:CreateLogStream
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                  - logs:GetLogEvents
                 Resource: "*"
               - Effect: Allow
                 Action: 
-                  - sns:*
+                  - sns:publish
                 Resource: "*"
               - Effect: Allow
                 Action:
-                  - ssm:*
+                  - ssm:GetParameter
                 Resource: "*"
               - Effect: Allow
                 Action:
-                  - s3:*
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
                 Resource: "*"
   
   LambdaFunctionLogGroup:
