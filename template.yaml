@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Creates Lambda function that does an ETL data transformation on a trigger from a cron job in EventBridge
+
+Globals:
+  Function:
+    Timeout: 30
+
+# # Parameters:
+# #   MyBuildEnvironment:
+# #     Description: Build Environment Type
+# #     Default: Test
+# #     Type: String
+# #     AllowedValues:
+# #       - Dev
+# #       - Test
+# #       - Prod
+# #     ConstraintDescription: You must specify 'Dev' | 'Test' | 'Prod'
+
+Resources:
+  ScheduledRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "Scheduled event to call ETL Lambda function"
+      #ScheduleExpression: "cron(0 0 * * ? *)" # Sat, 18 Jun 2022 00:00:00 UTC
+      ScheduleExpression: "rate(10 minutes)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: !GetAtt ScheduledFunction.Arn
+          Id: AWSETL
+
+  PermissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ScheduledFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ScheduledRule.Arn
+  
+  ScheduledFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: lambda_function.main
+      Runtime: python3.9
+      MemorySize: 512
+      Role: !GetAtt ETLRole.Arn
+      Timeout: 30
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref S3Bucket
+          SNS_TOPIC: !Ref ETLSNS
+          DB_TABLE: "covid19_data"
+
+  S3Bucket:
+    DeletionPolicy: Retain
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+  
+  ETLRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: 
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: SNS-LOG-SSM-S3-VPC
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: "*"
+              - Effect: Allow
+                Action: 
+                  - sns:*
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - ssm:*
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - s3:*
+                Resource: "*"
+  
+  LambdaFunctionLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    DependsOn: "ScheduledFunction"
+    Properties: 
+      RetentionInDays: 7
+      LogGroupName: !Join ["", ["/aws/lambda/", !Ref ScheduledFunction]]
+      
+  ETLSNS:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: "jacquesk@outlook.com"
+          Protocol: email
+
+Outputs:
+  S3Bucket:
+    Description: S3 Bucket
+    Value: !Ref S3Bucket
+  ETLSNS:
+    Description: SNS Topic
+    Value: !Ref ETLSNS
+  ETLRole:
+    Description: IAM Role
+    Value: !Ref ETLRole
+  ScheduledFunction:
+    Description: Lambda Function
+    Value: !Ref ScheduledFunction
+  ScheduledRule:
+    Description: EventBridge Rule
+    Value: !Ref ScheduledRule
