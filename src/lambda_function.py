@@ -13,9 +13,11 @@ ssm_client = boto3.client('ssm')
 
 # # Get DB configuration from Parameter store
 country_name = ssm_client.get_parameter(Name='/Covid19DataETL/country/name')
+user_new_jh_data = ssm_client.get_parameter(Name='/Covid19DataETL/data/jhnew')
 
 url_nyt = "https://raw.githubusercontent.com/nytimes/covid-19-data/master/us.csv"
 url_jh = "https://raw.githubusercontent.com/datasets/covid-19/master/data/time-series-19-covid-combined.csv"
+url_jh_new = "https://raw.githubusercontent.com/JacquesKellerman/event-driven-etl-pipeline/main/data/jh/time-series-19-covid-combined_new.csv"
 
 # Setup logging to CloudWatch
 logger = logging.getLogger()
@@ -37,7 +39,10 @@ def main(event, context):
     try:
         # 1. Download CSV files and store as S3 objects
         etl_data_functions.downloadFile(url_nyt, 'data-nyt.csv')
-        etl_data_functions.downloadFile(url_jh, 'data-jh.csv')
+        if user_new_jh_data.get("Parameter").get("Value") == "no":
+            etl_data_functions.downloadFile(url_jh, 'data-jh.csv')
+        else:
+            etl_data_functions.downloadFile(url_jh_new, 'data-jh.csv')
         # 2. Load from S3 into Pandas DataFrames
         df_nyt = etl_data_functions.loadDataFrame('c19data/data-nyt.csv')
         df_jh = etl_data_functions.loadDataFrame('c19data/data-jh.csv')

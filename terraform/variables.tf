@@ -20,6 +20,10 @@ variable "country_code" {
   default = "US"
 }
 
+variable "jh_new" {
+  default = "yes"
+}
+
 variable "file_path_nyt" {
   default = "https://raw.githubusercontent.com/nytimes/covid-19-data/master/us.csv"
 }

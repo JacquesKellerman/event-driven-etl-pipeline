@@ -23,7 +23,7 @@ Resources:
     Properties:
       Description: "Scheduled event to call ETL Lambda function"
       ScheduleExpression: "cron(0 0 * * ? *)" # Sat, 18 Jun 2022 00:00:00 UTC
-      #ScheduleExpression: "rate(10 minutes)"
+      #ScheduleExpression: "rate(5 minutes)"
       State: "ENABLED"
       Targets: 
         - 

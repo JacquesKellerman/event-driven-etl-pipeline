@@ -53,3 +53,10 @@ resource "aws_ssm_parameter" "google_data" {
   type        = "String"
   value       = var.file_path_google
 }
+
+resource "aws_ssm_parameter" "jh_new" {
+  name        = "/${var.db_name}/data/jhnew"
+  description = "Flag to use modified JH data CSV file"
+  type        = "String"
+  value       = var.jh_new
+}
